@@ -4,6 +4,8 @@ from tkinter.ttk import Combobox
 from tkinter.filedialog import askopenfilename
 import re
 import random
+import sqlite3
+import os
 root=tk.Tk()
 
 root.geometry("700x700")
@@ -17,6 +19,31 @@ add_student_icon=tk.PhotoImage(file="add_student_img.png")
 locked=tk.PhotoImage(file="locked.png")
 unlocked=tk.PhotoImage(file="unlocked.png")
 add_student_pic=tk.PhotoImage(file="add_image.png")
+
+def init_database():
+    if os.path.exists("students_account.db"):
+        pass
+    else:
+        connection=sqlite3.connect("students_account.db")
+        
+        cursor=connection.cursor()
+        cursor.execute("""
+        CREATE TABLE (
+        id_number text,
+        password text,
+        name text,
+        age text,
+        gender text,
+        phone_number text,
+        class text,
+        email_text,
+        image blob)
+        """)
+        
+        
+        connection.commit()
+        connection.close()
+    
 def confirmation_box(message):
     answer=tk.BooleanVar()
     answer.set(False)
@@ -223,7 +250,12 @@ def create_account():
     def generate_id_num():
         generated_num=""
         for r in range(6):
-            generated_num+=random.randint(0, 9)
+            generated_num+=str(random.randint(0, 9))
+        
+        student_id.config(state=tk.NORMAL)
+        student_id.delete(0, tk.END)
+        student_id.insert(tk.END,generated_num)
+        student_id.config(state="readonly")
     def check_input_validation():
         if student_name_ent.get()=="":
             student_name_ent.focus()
@@ -247,7 +279,7 @@ def create_account():
         elif not check_invalid_email(email_ent.get().lower()):
             email_ent.focus()
             email_ent.config(highlightbackground="red",highlightcolor="red")
-            message_box("Please Enter A Valid/nEmail Address")
+            message_box("Please Enter A Valid \n Email Address")
         elif student_password.get()=="":
             student_password.focus()
             student_password.config(highlightbackground="red",highlightcolor="red")
@@ -314,6 +346,8 @@ def create_account():
     student_id.insert(tk.END, "123456")
     student_id.config(state="readonly")
     
+    generate_id_num()
+    
     id_info=tk.Label(add_account_fm,text="""Automatic Generated ID Number
     ! Remember Using This ID Number
     Student will Login Account""",justify=tk.LEFT)
@@ -351,7 +385,11 @@ def create_account():
     add_account_fm.pack(pady=5)
     add_account_fm.configure(width=600,height=580)
 
+init_database()
 create_account()
 root.mainloop()
+
+
+
 
 
