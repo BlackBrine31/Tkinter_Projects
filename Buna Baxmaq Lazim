@@ -18,7 +18,7 @@ login_admin_icon=tk.PhotoImage(file="admin_img.png")
 add_student_icon=tk.PhotoImage(file="add_student_img.png")
 locked=tk.PhotoImage(file="locked.png")
 unlocked=tk.PhotoImage(file="unlocked.png")
-add_student_pic=tk.PhotoImage(file="add_image.png")
+add_student_pic = tk.PhotoImage(file="add_image.png") 
 
 def init_database():
     if os.path.exists("students_account.db"):
@@ -43,6 +43,13 @@ def init_database():
         
         connection.commit()
         connection.close()
+def add_data(id_number,password,name,age,gender,phone_number,student_class,email,pic_data):
+    connection=sqlite3.connect("students_account.db")
+    
+    cursor=connection.cursor()
+    cursor.execute(f"""
+    INSERT INTO data VALUES("{id_number}","{password}","{name}","{age}","{gender}","{phone_number}","{student_class}","{email}","{pic_data}",)
+    """)
     
 def confirmation_box(message):
     answer=tk.BooleanVar()
@@ -284,13 +291,28 @@ def create_account():
             student_password.focus()
             student_password.config(highlightbackground="red",highlightcolor="red")
             message_box("Student Password Required")
+        else:
+            pic_data=b""
+            if pic_path.get()!="":
+                    resize_pic=Image.open(pic_path.get())
+                    resize_pic.save("temp_pic.png")
+                    
+                    read_data=open("temp_pic.png","rb")
+                    pic_data=read_data.read()
+                    read_data.close()
+            else:
+                read_data=open("add_image.png","rb")
+                pic_data=read_data.read()
+                read_data.close()
+            add_data(student_id.get(), student_password.get(), student_name_ent.get(), student_age_ent.get(),student_gender.get(), student_contact_ent.get(), student_class_btn.get(), email_ent.get(), pic_data)
+            message_box("Account Created Succesfully")
     class_list=["5th","6th","7th","8th","9th","10th","11th"]
     add_account_fm=tk.Frame(root, 
                              highlightbackground=bg_color,
                              highlightthickness=3)
     add_pic_section_fm=tk.Frame(add_account_fm,highlightbackground=bg_color,highlightthickness=2)
     
-    add_pic_btn=tk.Button(add_pic_section_fm, image=add_student_pic,command=open_pic)
+    add_pic_btn=tk.Button(add_pic_section_fm, image=add_student_pic, command=open_pic)
     
     add_pic_btn.pack()
     
@@ -366,7 +388,7 @@ def create_account():
     Student will get Future Notifications""",justify=tk.LEFT)
     email_info.place(x=350,y=200)
     
-    student_password_lb=tk.Label(add_account_fm,text="Student Password",font=("Bond",12))
+    student_password_lb = tk.Label(add_account_fm, text='Student Password', font=('Bond', 12))
     student_password_lb.place(x=350,y=330)
     
     student_password=tk.Entry(add_account_fm,font=("Bold",15),highlightcolor=bg_color,highlightbackground="gray",highlightthickness=2)
@@ -388,8 +410,3 @@ def create_account():
 init_database()
 create_account()
 root.mainloop()
-
-
-
-
-
