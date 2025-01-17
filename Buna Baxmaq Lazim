@@ -1,5 +1,5 @@
 import tkinter as tk 
-from PIL import Image,ImageTk
+from PIL import Image,ImageTk,ImageDraw,ImageFont
 from tkinter.ttk import Combobox
 from tkinter.filedialog import askopenfilename
 import re
@@ -29,27 +29,44 @@ def init_database():
         cursor=connection.cursor()
         cursor.execute("""
         CREATE TABLE (
-        id_number text,
-        password text,
-        name text,
-        age text,
-        gender text,
-        phone_number text,
-        class text,
-        email_text,
-        image blob)
+        SELECT * FROM data
         """)
         
         
         connection.commit()
+        print(cursor.fetchall())
         connection.close()
+def check_id_already_exits(id_number):
+    connection=sqlite3.connect("students_account.db")
+    
+    cursor=connection.cursor()
+    #cursor.execute(f"""
+    #SELECT id_number FROM data WHERE id_number=={id_number}
+    #)
+    #""")
+    cursor.execute("test")
 def add_data(id_number,password,name,age,gender,phone_number,student_class,email,pic_data):
     connection=sqlite3.connect("students_account.db")
     
     cursor=connection.cursor()
-    cursor.execute(f"""
-    INSERT INTO data VALUES("{id_number}","{password}","{name}","{age}","{gender}","{phone_number}","{student_class}","{email}","{pic_data}",)
+    cursor.execute("""
+    CREATE TABLE IF NOT EXISTS data (
+        id_number TEXT PRIMARY KEY,
+        password TEXT,
+        name TEXT,
+        age INTEGER,
+        gender TEXT,
+        phone_number TEXT,
+        student_class TEXT,
+        email TEXT,
+        pic_data BLOB
+    )
     """)
+    connection.commit()
+    response=cursor.fetchall()
+    connection.close()
+    return response
+
     
 def confirmation_box(message):
     answer=tk.BooleanVar()
@@ -81,6 +98,33 @@ def message_box(message):
     message_lb.pack(pady=50)
     
     message_box_fm.place(x=200,y=150,height=300,width=300)
+def draw_student_card():
+    student_card=Image.open("student_card_frame.png")
+    pic=Image.open("locked.png")
+    student_card.paste(pic,(15,25))
+    
+    student_card.show()
+
+def student_card_page():
+    student_card_page_fm=tk.Frame(root,highlightbackground=bg_color,highlightthickness=3)
+    
+    heading_lb=tk.Label(student_card_page_fm,text="Student Card",bg=bg_color,fg="white",font=("Bold",15))
+    heading_lb.place(x=0,y=0,width=400)
+    
+    close_btn=tk.Button(student_card_page_fm,text="X",bg=bg_color,fg="white",font=("Bold",13),bd=0,command=lambda: student_card_page.destroy())
+    close_btn.place(x=5,y=0)
+    
+    student_card_lb=tk.Label(student_card_page_fm)
+    student_card_lb.place(x=50,y=50)
+    
+    save_card_btn=tk.Button(student_card_page_fm,text="Save Student Card",bg=bg_color,fg="white",font=("Bold",15),bd=1)
+    save_card_btn.place(x=80,y=375)
+    
+    print_card_btn=tk.Button(student_card_page_fm,text="🖨️",bg=bg_color,fg="white",font=("Bold",15),bd=1)
+    print_card_btn.place(x=275,y=375)
+    
+    student_card_page_fm.place(x=100,y=60,width=400,height=450)
+
 def welcome_page():
     def forward_to_add_account_page():
         welcome_page_fm.destroy()
@@ -258,11 +302,15 @@ def create_account():
         generated_num=""
         for r in range(6):
             generated_num+=str(random.randint(0, 9))
-        
-        student_id.config(state=tk.NORMAL)
-        student_id.delete(0, tk.END)
-        student_id.insert(tk.END,generated_num)
-        student_id.config(state="readonly")
+        if not check_id_already_exits(generated_num):
+            print(check_id_already_exits(generated_num))
+            
+            student_id.config(state=tk.NORMAL)
+            student_id.delete(0, tk.END)
+            student_id.insert(tk.END,generated_num)
+            student_id.config(state="readonly")
+        else:
+            generate_id_num()
     def check_input_validation():
         if student_name_ent.get()=="":
             student_name_ent.focus()
@@ -357,7 +405,6 @@ def create_account():
     
     student_class_btn=Combobox(add_account_fm,font=("Bold",15),state="readonly",values=class_list)
     student_class_btn.place(x=100,y=300,width=180,height=30)
-    student_class_btn.bind("<KeyRelease>",lambda e:remove_highlight_warning(student_class_btn))
 
     student_id_lb=tk.Label(add_account_fm,text="Student ID Number",font=("Bond",12))
     student_id_lb.place(x=350,y=35)
@@ -407,6 +454,7 @@ def create_account():
     add_account_fm.pack(pady=5)
     add_account_fm.configure(width=600,height=580)
 
-init_database()
-create_account()
+welcome_page()
 root.mainloop()
+
+
